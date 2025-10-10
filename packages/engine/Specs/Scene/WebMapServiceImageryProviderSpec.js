@@ -34,8 +34,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
   afterEach(function () {
     Resource._Implementations.createImage =
       Resource._DefaultImplementations.createImage;
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
+    Resource._Implementations.load = Resource._DefaultImplementations.load;
   });
 
   it("conforms to ImageryProvider interface", function () {
@@ -929,7 +928,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         layers: "someLayer",
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -939,7 +938,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-GeoJSON.json",
           responseType,
           method,
@@ -971,7 +970,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         layers: "someLayer",
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -981,7 +980,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-MapInfoMXP.xml",
           responseType,
           method,
@@ -1010,7 +1009,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         layers: "someLayer",
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1020,7 +1019,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-Esri.xml",
           responseType,
           method,
@@ -1049,7 +1048,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         layers: "someLayer",
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1059,7 +1058,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-THREDDS.xml",
           responseType,
           method,
@@ -1088,7 +1087,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         layers: "someLayer",
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1098,7 +1097,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-msGMLOutput.xml",
           responseType,
           method,
@@ -1127,7 +1126,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         layers: "someLayer",
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1137,7 +1136,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-Unknown.xml",
           responseType,
           method,
@@ -1166,7 +1165,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         layers: "someLayer",
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1176,7 +1175,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         overrideMimeType,
       ) {
         expect(url).toContain("GetFeatureInfo");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-ServiceException.xml",
           responseType,
           method,
@@ -1244,7 +1243,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         getFeatureInfoFormats: [new GetFeatureInfoFormat("xml")],
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1255,7 +1254,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       ) {
         expect(url).toContain("GetFeatureInfo");
         expect(url).not.toContain("json");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-MapInfoMXP.xml",
           responseType,
           method,
@@ -1285,7 +1284,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         getFeatureInfoFormats: [new GetFeatureInfoFormat("json")],
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1300,7 +1299,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           deferred.reject();
         } else {
           // this should not happen
-          Resource._DefaultImplementations.loadWithXhr(
+          Resource._DefaultImplementations.load(
             "Data/WMS/GetFeatureInfo-MapInfoMXP.xml",
             responseType,
             method,
@@ -1329,7 +1328,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         },
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1345,7 +1344,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         expect(url).toContain("&y=");
         expect(url).not.toContain("&i=");
         expect(url).not.toContain("&j=");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-MapInfoMXP.xml",
           responseType,
           method,
@@ -1368,7 +1367,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         },
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1384,7 +1383,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         expect(url).not.toContain("&y=");
         expect(url).toContain("&i=");
         expect(url).toContain("&j=");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-MapInfoMXP.xml",
           responseType,
           method,
@@ -1404,7 +1403,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         layers: "someLayer",
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1420,7 +1419,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         expect(url).toContain("&y=");
         expect(url).not.toContain("&i=");
         expect(url).not.toContain("&j=");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-MapInfoMXP.xml",
           responseType,
           method,
@@ -1450,7 +1449,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         ],
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1465,7 +1464,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
           deferred.reject();
         }
 
-        return Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo-Custom.json",
           responseType,
           method,
@@ -1488,7 +1487,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         layers: "someLayer",
       });
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1501,7 +1500,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         if (url.indexOf(encodeURIComponent("text/html")) < 0) {
           deferred.reject();
         }
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/WMS/GetFeatureInfo.html",
           responseType,
           method,

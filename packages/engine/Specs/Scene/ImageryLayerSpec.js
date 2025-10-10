@@ -45,8 +45,7 @@ describe(
     afterEach(function () {
       Resource._Implementations.createImage =
         Resource._DefaultImplementations.createImage;
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
+      Resource._Implementations.load = Resource._DefaultImplementations.load;
 
       scene.frameState.commandList.length = 0;
     });
@@ -125,7 +124,7 @@ describe(
         );
       };
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -134,7 +133,7 @@ describe(
         deferred,
         overrideMimeType,
       ) {
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/Images/Red16x16.png",
           responseType,
           method,
@@ -182,7 +181,7 @@ describe(
         );
       };
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -227,7 +226,7 @@ describe(
             }),
           );
         }
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/Images/Red16x16.png",
           responseType,
           method,

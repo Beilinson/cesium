@@ -9,8 +9,8 @@ import createFakeBingMapsMetadataResponse from "../createFakeBingMapsMetadataRes
 
 describe("Core/createWorldImageryAsync", function () {
   it("resolves to IonImageryProvider instance with default parameters", async function () {
-    const originalLoadWithXhr = Resource._Implementations.loadWithXhr;
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    const originalload = Resource._Implementations.load;
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -29,7 +29,7 @@ describe("Core/createWorldImageryAsync", function () {
           return;
         }
 
-        return originalLoadWithXhr(
+        return originalload(
           url,
           responseType,
           method,

@@ -22,8 +22,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   afterEach(function () {
     Resource._Implementations.createImage =
       Resource._DefaultImplementations.createImage;
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
+    Resource._Implementations.load = Resource._DefaultImplementations.load;
   });
 
   it("conforms to ImageryProvider interface", function () {
@@ -49,7 +48,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
     const url = "http://example.invalid";
     const channel = 1234;
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -58,7 +57,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
         responseType,
         method,
@@ -84,7 +83,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
     const url = "http://example.invalid";
     const channel = 1234;
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -93,7 +92,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
         responseType,
         method,
@@ -127,7 +126,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   });
 
   it("fromUrl throws when channel cannot be found", async function () {
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -136,7 +135,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/GoogleEarthEnterpriseMapsProvider/bad_channel.json",
         responseType,
         method,
@@ -156,7 +155,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   });
 
   it("fromUrl throws when channel version cannot be found", async function () {
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -165,7 +164,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/GoogleEarthEnterpriseMapsProvider/bad_version.json",
         responseType,
         method,
@@ -185,7 +184,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   });
 
   it("fromUrl throws when unsupported projection is specified", async function () {
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -194,7 +193,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/GoogleEarthEnterpriseMapsProvider/bad_projection.json",
         responseType,
         method,
@@ -218,7 +217,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
     const url = "http://example.invalid";
     const channel = 1234;
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -227,7 +226,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
         responseType,
         method,
@@ -254,7 +253,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
     const channel = 1234;
     const version = 1;
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -263,7 +262,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       deferred,
       overrideMimeType,
     ) {
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/GoogleEarthEnterpriseMapsProvider/good.json",
         responseType,
         method,
@@ -301,7 +300,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
     ) {
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
-        // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+        // If ImageBitmap is supported, we expect a load request to fetch it as a blob.
         Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
@@ -324,7 +323,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       }
     };
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -338,7 +337,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
       );
 
       // Just return any old image.
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/Images/Red16x16.png",
         responseType,
         method,
@@ -359,7 +358,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
     const version = 1;
     const channel = 1234;
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -408,7 +407,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   });
 
   it("defaults to WebMercatorTilingScheme when no projection specified", async function () {
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -446,7 +445,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   });
 
   it("Projection is WebMercatorTilingScheme when server projection is mercator", async function () {
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -485,7 +484,7 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
   });
 
   it("Projection is GeographicTilingScheme when server projection is flat", async function () {
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,

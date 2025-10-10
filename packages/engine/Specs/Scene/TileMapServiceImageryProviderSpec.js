@@ -40,7 +40,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
     "</TileMap>";
 
   function patchRequestScheduler(xmlResponseString) {
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -60,7 +60,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   }
 
   function patchRequestSchedulerToRejectRequest() {
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -84,8 +84,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
   afterEach(function () {
     Resource._Implementations.createImage =
       Resource._DefaultImplementations.createImage;
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
+    Resource._Implementations.load = Resource._DefaultImplementations.load;
   });
 
   it("return a UrlTemplateImageryProvider", function () {
@@ -298,7 +297,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
 
   it("resource request takes a query string", async function () {
     /*eslint-disable no-unused-vars*/
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,

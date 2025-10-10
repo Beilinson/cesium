@@ -208,7 +208,7 @@ describe("Scene/IonImageryProvider", function () {
   }
 
   it("createImageryProvider works with ARCGIS_MAPSERVER", function () {
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -231,7 +231,7 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   it("createImageryProvider works with BING", function () {
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -262,7 +262,7 @@ describe("Scene/IonImageryProvider", function () {
   });
 
   it("createImageryProvider works with GOOGLE_EARTH", function () {
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,

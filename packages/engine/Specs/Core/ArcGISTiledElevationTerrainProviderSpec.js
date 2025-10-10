@@ -143,7 +143,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     };
 
     RequestScheduler.clearForSpecs();
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -154,7 +154,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     ) {
       // Tile request
       if (url.indexOf("/tile/") !== -1) {
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           lercTileUrl,
           responseType,
           method,
@@ -184,8 +184,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
   afterEach(function () {
     Resource._Implementations.createImage =
       Resource._DefaultImplementations.createImage;
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
+    Resource._Implementations.load = Resource._DefaultImplementations.load;
   });
 
   function createRequest() {

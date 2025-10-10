@@ -140,8 +140,7 @@ describe("Core/sampleTerrain", function () {
     });
 
     afterEach(function () {
-      Resource._Implementations.loadWithXhr =
-        Resource._DefaultImplementations.loadWithXhr;
+      Resource._Implementations.load = Resource._DefaultImplementations.load;
     });
 
     function spyOnTerrainDataCreateMesh(terrainProvider) {
@@ -190,7 +189,7 @@ describe("Core/sampleTerrain", function () {
     }
 
     function patchXHRLoad(proxySpec) {
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -221,7 +220,7 @@ describe("Core/sampleTerrain", function () {
         }
 
         // make a real request to the proxied path for the matching source path
-        return Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.load(
           proxiedUrl,
           responseType,
           method,

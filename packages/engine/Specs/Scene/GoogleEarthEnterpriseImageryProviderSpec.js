@@ -42,8 +42,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
   afterEach(function () {
     Resource._Implementations.createImage =
       Resource._DefaultImplementations.createImage;
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
+    Resource._Implementations.load = Resource._DefaultImplementations.load;
   });
 
   it("conforms to ImageryProvider interface", function () {
@@ -121,7 +120,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       }
     };
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -140,7 +139,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       }
 
       // Just return any old image.
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/Images/Red16x16.png",
         responseType,
         method,
@@ -249,7 +248,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       }, 1);
     });
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -260,7 +259,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/Images/Red16x16.png",
           responseType,
           method,

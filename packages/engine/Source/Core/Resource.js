@@ -257,7 +257,7 @@ Resource.supportsImageBitmapOptions = function () {
   return supportsImageBitmapOptionsPromise;
 };
 
-Resource._useFetch = true;
+Resource._useFetch = false;
 
 Object.defineProperties(Resource, {
   /**
@@ -1196,6 +1196,9 @@ Resource.fetchText = function (options) {
 Resource.prototype.fetchJson = async function () {
   let value;
   if (Resource.useFetch) {
+    // The only reason this isn't returned immediately despite being parsed using resource.json()
+    // is some tests actually force the json to return a stringified json, so we have to manually parse it below.
+    // That shouldn't happen in production.
     value = await this.fetch({
       responseType: "json",
       headers: {
@@ -1203,7 +1206,7 @@ Resource.prototype.fetchJson = async function () {
       },
     });
   } else {
-    value = this.fetch({
+    value = await this.fetch({
       responseType: "text",
       headers: {
         Accept: "application/json,*/*;q=0.01",
@@ -1508,6 +1511,14 @@ if (typeof DOMParser !== "undefined") {
   parser = new DOMParser();
 }
 
+/**
+ * @typedef {"" | "arraybuffer" | "blob" | "document" | "json" | "text"} ResponseType
+ */
+
+/**
+ * @param {RegExpExecArray } dataUriRegexResult
+ * @param {ResponseType} responseType
+ */
 function decodeDataUri(dataUriRegexResult, responseType) {
   responseType = responseType ?? "";
   const mimeType = dataUriRegexResult[1];
@@ -1551,7 +1562,7 @@ function decodeDataUri(dataUriRegexResult, responseType) {
  * the more specific functions eg. fetchJson, fetchBlob, etc.
  *
  * @param {object} [options] Object with the following properties:
- * @param {string} [options.responseType] The type of response.  This controls the type of item returned.
+ * @param {ResponseType} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {string} [options.overrideMimeType] Overrides the MIME type returned by the server.
  * @returns {Promise<any>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
@@ -2030,15 +2041,13 @@ Resource._Implementations.createImage = function (
       const responseType = "blob";
       const method = "GET";
       const xhrDeferred = defer();
-      const xhr = Resource._Implementations.loadWithXhr(
+      const xhr = Resource._Implementations.load(
         url,
         responseType,
         method,
         undefined,
         undefined,
         xhrDeferred,
-        undefined,
-        undefined,
         undefined,
       );
 
@@ -2099,12 +2108,13 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
 /**
  * Loads a resource using either the Fetch API or XMLHttpRequest, depending on `Resource.useFetch`.
  *
+ * @private
  * @param {string} url
- * @param {string} responseType
+ * @param {ResponseType} responseType
  * @param {string} method
  * @param {object} data
  * @param {object} headers
- * @param {defer.deferred} deferred
+ * @param {object} deferred
  * @param {string} overrideMimeType
  * @returns A cancellation function to cancel the request.
  */
@@ -2154,12 +2164,13 @@ Resource._Implementations.load = function (
 /**
  * Loads a resource using the Fetch API
  *
+ * @private
  * @param {string} url
- * @param {string} responseType
+ * @param {XMLHttpRequestResponseType} responseType
  * @param {string} method
  * @param {object} data
  * @param {object} headers
- * @param {defer.deferred} deferred
+ * @param {object} deferred
  * @param {string|undefined} overrideMimeType
  * @returns {AbortController} The AbortController which can be used to cancel the request.
  */
@@ -2201,6 +2212,7 @@ Resource._Implementations.loadWithFetch = function (
 
 /**
  * Handles the fetch response, resolving or rejecting the deferred as appropriate
+ * @private
  * @param {Promise<Response>} responsePromise
  * @param {string} url
  * @param {XMLHttpRequestResponseType|undefined} responseType
@@ -2278,6 +2290,7 @@ async function handleFetchResponse(
 }
 
 /**
+ * @private
  * @param {Response} response
  * @param {XMLHttpRequestResponseType|undefined} responseType
  * @param {string|undefined} overrideMimeType

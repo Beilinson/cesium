@@ -41,12 +41,11 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       Resource._DefaultImplementations.loadAndExecuteScript;
     Resource._Implementations.createImage =
       Resource._DefaultImplementations.createImage;
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
+    Resource._Implementations.load = Resource._DefaultImplementations.load;
   });
 
   function stubJSONCall(baseUrl, result, withProxy, token) {
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -355,7 +354,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       }
     };
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -367,7 +366,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
 
       // Just return any old image.
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/Images/Red16x16.png",
         responseType,
         method,
@@ -442,7 +441,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     ) {
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
-        // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+        // If ImageBitmap is supported, we expect a load request to fetch it as a blob.
         Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
@@ -463,7 +462,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       }
     };
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -475,7 +474,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       expect(url).toEqual(getAbsoluteUri(`${baseUrl}tile/0/0/0`));
 
       // Just return any old image.
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/Images/Red16x16.png",
         responseType,
         method,
@@ -699,7 +698,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     ) {
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
-        // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+        // If ImageBitmap is supported, we expect a load request to fetch it as a blob.
         Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
@@ -720,7 +719,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       }
     };
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -732,7 +731,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       expect(url).toEqual(expectedTileUrl);
 
       // Just return any old image.
-      Resource._DefaultImplementations.loadWithXhr(
+      Resource._DefaultImplementations.load(
         "Data/Images/Red16x16.png",
         responseType,
         method,
@@ -994,7 +993,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         },
       );
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1004,7 +1003,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         overrideMimeType,
       ) {
         expect(url).toContain("identify");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/ArcGIS/identify-WebMercator.json",
           responseType,
           method,
@@ -1037,7 +1036,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         },
       );
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1047,7 +1046,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         overrideMimeType,
       ) {
         expect(url).toContain("identify");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/ArcGIS/identify-Geographic.json",
           responseType,
           method,
@@ -1110,7 +1109,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
       provider.enablePickFeatures = true;
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1120,7 +1119,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         overrideMimeType,
       ) {
         expect(url).toContain("identify");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/ArcGIS/identify-WebMercator.json",
           responseType,
           method,
@@ -1137,7 +1136,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     it("picks from individual layers", async function () {
       stubJSONCall("made/up/map/server", webMercatorResult);
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -1150,7 +1149,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         const query = queryToObject(uri.query());
 
         expect(query.layers).toContain("visible:someLayer,anotherLayerYay");
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/ArcGIS/identify-WebMercator.json",
           responseType,
           method,

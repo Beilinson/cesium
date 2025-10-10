@@ -160,7 +160,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     const baseurl = "http://fake.fake.invalid/";
 
     let req = 0;
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -176,7 +176,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
           deferred.reject(); // Reject dbRoot request and use defaults
         } else {
           expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
-          Resource._DefaultImplementations.loadWithXhr(
+          Resource._DefaultImplementations.load(
             "Data/GoogleEarthEnterprise/gee.metadata",
             responseType,
             method,
@@ -215,7 +215,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     });
 
     let req = 0;
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -231,7 +231,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
           deferred.reject(); // Reject dbRoot request and use defaults
         } else {
           expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
-          Resource._DefaultImplementations.loadWithXhr(
+          Resource._DefaultImplementations.load(
             "Data/GoogleEarthEnterprise/gee.metadata",
             responseType,
             method,

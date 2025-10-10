@@ -35,8 +35,7 @@ describe("Scene/BingMapsImageryProvider", function () {
   });
 
   afterEach(function () {
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
+    Resource._Implementations.load = Resource._DefaultImplementations.load;
     Resource._Implementations.createImage =
       Resource._DefaultImplementations.createImage;
   });
@@ -105,7 +104,7 @@ describe("Scene/BingMapsImageryProvider", function () {
 
       const url = request.url;
       if (/^blob:/.test(url) || supportsImageBitmapOptions) {
-        // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+        // If ImageBitmap is supported, we expect a load request to fetch it as a blob.
         Resource._DefaultImplementations.createImage(
           request,
           crossOrigin,
@@ -136,7 +135,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       }
     };
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -169,7 +168,7 @@ describe("Scene/BingMapsImageryProvider", function () {
         deferred.resolve(metadataResponse);
       } else {
         // Just return any old image.
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/Images/Red16x16.png",
           responseType,
           method,
@@ -471,7 +470,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       }
     };
 
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -482,7 +481,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/Images/Red16x16.png",
           responseType,
           method,

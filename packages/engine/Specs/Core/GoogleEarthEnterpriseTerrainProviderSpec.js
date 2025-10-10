@@ -70,8 +70,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
   });
 
   afterEach(function () {
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
+    Resource._Implementations.load = Resource._DefaultImplementations.load;
   });
 
   it("conforms to TerrainProvider interface", function () {
@@ -203,7 +202,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
   describe("requestTileGeometry", function () {
     it("provides GoogleEarthEnterpriseTerrainData", function () {
       installMockGetQuadTreePacket();
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -212,7 +211,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         deferred,
         overrideMimeType,
       ) {
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/GoogleEarthEnterprise/gee.terrain",
           responseType,
           method,
@@ -229,7 +228,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
 
     it("provides GoogleEarthEnterpriseTerrainData with fromMetadata", async function () {
       installMockGetQuadTreePacket();
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -238,7 +237,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         deferred,
         overrideMimeType,
       ) {
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/GoogleEarthEnterprise/gee.terrain",
           responseType,
           method,
@@ -268,7 +267,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
 
       const deferreds = [];
       let loadRealTile = true;
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -283,7 +282,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
 
         if (loadRealTile) {
           loadRealTile = false;
-          return Resource._DefaultImplementations.loadWithXhr(
+          return Resource._DefaultImplementations.load(
             "Data/GoogleEarthEnterprise/gee.terrain",
             responseType,
             method,
@@ -348,7 +347,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
       installMockGetQuadTreePacket();
       const baseUrl = "made/up/url";
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -357,7 +356,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         deferred,
         overrideMimeType,
       ) {
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           "Data/CesiumTerrainTileJson/tile.terrain",
           responseType,
           method,

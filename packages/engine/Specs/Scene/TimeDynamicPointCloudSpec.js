@@ -712,7 +712,7 @@ describe(
     it("frame failed event is raised from request failure", function () {
       const pointCloud = createTimeDynamicPointCloud();
       let frameRejectedCount = 0;
-      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+      spyOn(Resource._Implementations, "load").and.callFake(
         function (
           request,
           responseType,

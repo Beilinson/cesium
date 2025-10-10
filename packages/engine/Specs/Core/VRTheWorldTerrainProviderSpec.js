@@ -14,7 +14,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
   const imageUrl = "Data/Images/Red16x16.png";
 
   function patchXHRLoad() {
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,
@@ -24,7 +24,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       overrideMimeType,
     ) {
       if (url === imageUrl) {
-        Resource._DefaultImplementations.loadWithXhr(
+        Resource._DefaultImplementations.load(
           url,
           responseType,
           method,
@@ -73,8 +73,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
   afterEach(function () {
     Resource._Implementations.createImage =
       Resource._DefaultImplementations.createImage;
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
+    Resource._Implementations.load = Resource._DefaultImplementations.load;
     RequestScheduler.maximumRequestsPerServer = originalRequestersPerServer;
   });
 
@@ -161,7 +160,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
 
   it("fromUrl throws if the SRS is not supported", async function () {
     patchXHRLoad();
-    Resource._Implementations.loadWithXhr = function (
+    Resource._Implementations.load = function (
       url,
       responseType,
       method,

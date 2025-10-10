@@ -4586,7 +4586,7 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -4618,7 +4618,7 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -4651,7 +4651,7 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -4687,7 +4687,7 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -4723,7 +4723,7 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -4761,7 +4761,7 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -4802,7 +4802,7 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,
@@ -4842,7 +4842,7 @@ describe("DataSources/KmlDataSource", function () {
           </NetworkLink>';
 
     const requestNetworkLink = defer();
-    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+    spyOn(Resource._Implementations, "load").and.callFake(
       function (
         url,
         responseType,

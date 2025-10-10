@@ -19,8 +19,7 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
   afterEach(function () {
     Resource._Implementations.createImage =
       Resource._DefaultImplementations.createImage;
-    Resource._Implementations.loadWithXhr =
-      Resource._DefaultImplementations.loadWithXhr;
+    Resource._Implementations.load = Resource._DefaultImplementations.load;
   });
 
   describe("construction", function () {
@@ -66,7 +65,7 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
         },
       );
 
-      Resource._Implementations.loadWithXhr = function (
+      Resource._Implementations.load = function (
         url,
         responseType,
         method,
@@ -76,7 +75,7 @@ describe("Scene/DiscardMissingTileImagePolicy", function () {
         overrideMimeType,
       ) {
         expect(url).toEqual(missingImageUrl);
-        return Resource._DefaultImplementations.loadWithXhr(
+        return Resource._DefaultImplementations.load(
           "Data/Images/Red16x16.png",
           responseType,
           method,

@@ -133,6 +133,7 @@
     "test-webgl-validation": "gulp test --webglValidation",
     "test-webgl-stub": "gulp test --webglStub",
     "test-release": "gulp test --release",
+    "test-weird": "gulp test --failTaskOnError --webgl-stub --release --suppressPassed",
     "test-e2e": "playwright test -c Specs/e2e/playwright.config.js --project=chromium",
     "test-e2e-all": "playwright test -c Specs/e2e/playwright.config.js",
     "test-e2e-release": "release=true playwright test -c Specs/e2e/playwright.config.js --project=chromium",

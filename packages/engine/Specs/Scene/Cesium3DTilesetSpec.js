@@ -435,8 +435,8 @@ describe(
     });
 
     it("passes version in query string to all external resources", function () {
-      // Spy on loadWithXhr so we can verify requested urls
-      spyOn(Resource._Implementations, "loadWithXhr").and.callThrough();
+      // Spy on load so we can verify requested urls
+      spyOn(Resource._Implementations, "load").and.callThrough();
 
       const queryParams = "?a=1&b=boy";
       const queryParamsWithVersion = "?a=1&b=boy&v=1.2.3";
@@ -444,7 +444,7 @@ describe(
         scene,
         tilesetWithExternalResourcesUrl + queryParams,
       ).then(function (tileset) {
-        const calls = Resource._Implementations.loadWithXhr.calls.all();
+        const calls = Resource._Implementations.load.calls.all();
         const callsLength = calls.length;
         for (let i = 0; i < callsLength; ++i) {
           const url = calls[0].args[0];
@@ -1892,8 +1892,8 @@ describe(
       // Set view so that no tiles are loaded initially
       viewNothing();
 
-      //Spy on loadWithXhr so we can verify requested urls
-      spyOn(Resource._Implementations, "loadWithXhr").and.callThrough();
+      //Spy on load so we can verify requested urls
+      spyOn(Resource._Implementations, "load").and.callThrough();
 
       const queryParams = "a=1&b=boy";
       let expectedUrl = `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json?${queryParams}`;
@@ -1902,11 +1902,11 @@ describe(
         `${tilesetOfTilesetsUrl}?${queryParams}`,
       );
       //Make sure tileset JSON file was requested with query parameters
-      expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(
+      expect(Resource._Implementations.load.calls.argsFor(0)[0]).toEqual(
         expectedUrl,
       );
 
-      Resource._Implementations.loadWithXhr.calls.reset();
+      Resource._Implementations.load.calls.reset();
 
       // Set view so that root's content is requested
       viewRootOnly();
@@ -1920,7 +1920,7 @@ describe(
       expectedUrl = getAbsoluteUri(
         `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?v=1.2.3&${queryParams}`,
       );
-      expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(
+      expect(Resource._Implementations.load.calls.argsFor(0)[0]).toEqual(
         expectedUrl,
       );
     });
@@ -2487,7 +2487,7 @@ describe(
       const spyUpdate = jasmine.createSpy("listener");
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl)
         .then(function (tileset) {
-          spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+          spyOn(Resource._Implementations, "load").and.callFake(
             function (
               url,
               responseType,
@@ -4275,7 +4275,7 @@ describe(
     it("tile expires", function () {
       return Cesium3DTilesTester.loadTileset(scene, batchedExpirationUrl).then(
         function (tileset) {
-          spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+          spyOn(Resource._Implementations, "load").and.callFake(
             function (
               url,
               responseType,
@@ -4285,7 +4285,7 @@ describe(
               deferred,
               overrideMimeType,
             ) {
-              Resource._DefaultImplementations.loadWithXhr(
+              Resource._DefaultImplementations.load(
                 batchedColorsB3dmUrl,
                 responseType,
                 method,
@@ -4351,8 +4351,7 @@ describe(
           expect(tile._expiredContent).toBeDefined(); // Still holds onto expired content until the content state is READY
 
           // Check that url contains a query param with the timestamp
-          const url =
-            Resource._Implementations.loadWithXhr.calls.first().args[0];
+          const url = Resource._Implementations.load.calls.first().args[0];
           expect(url.indexOf("expired=") >= 0).toBe(true);
 
           // statistics are still the same
@@ -4395,7 +4394,7 @@ describe(
       ).then(async function (tileset) {
         // Intercept the request and load a subtree with one less child. Still want to make an actual request to simulate
         // real use cases instead of immediately returning a pre-created array buffer.
-        spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+        spyOn(Resource._Implementations, "load").and.callFake(
           function (
             url,
             responseType,
@@ -4406,7 +4405,7 @@ describe(
             overrideMimeType,
           ) {
             const newDeferred = defer();
-            Resource._DefaultImplementations.loadWithXhr(
+            Resource._DefaultImplementations.load(
               tilesetSubtreeUrl,
               responseType,
               method,
@@ -4452,8 +4451,7 @@ describe(
         expect(spyUpdate.calls.count()).toEqual(4);
 
         // Remove the spy so new tiles load in normally
-        Resource._Implementations.loadWithXhr =
-          Resource._DefaultImplementations.loadWithXhr;
+        Resource._Implementations.load = Resource._DefaultImplementations.load;
 
         // Wait for the new tileset content to come in with one less leaf
         return pollToPromise(function () {

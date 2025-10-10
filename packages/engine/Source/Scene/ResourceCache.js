@@ -24,7 +24,7 @@ import ResourceCacheStatistics from "./ResourceCacheStatistics.js";
  */
 function ResourceCache() {}
 
-ResourceCache.cacheEntries = {};
+ResourceCache.cacheEntries = new Map();
 
 // Statistics about binary data stored in the resource cache
 ResourceCache.statistics = new ResourceCacheStatistics();
@@ -61,7 +61,7 @@ ResourceCache.get = function (cacheKey) {
   Check.typeOf.string("cacheKey", cacheKey);
   //>>includeEnd('debug');
 
-  const cacheEntry = ResourceCache.cacheEntries[cacheKey];
+  const cacheEntry = ResourceCache.cacheEntries.get(cacheKey);
   if (defined(cacheEntry)) {
     ++cacheEntry.referenceCount;
     return cacheEntry.resourceLoader;
@@ -88,14 +88,14 @@ ResourceCache.add = function (resourceLoader) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.resourceLoader.cacheKey", cacheKey);
 
-  if (defined(ResourceCache.cacheEntries[cacheKey])) {
+  if (defined(ResourceCache.cacheEntries.has(cacheKey))) {
     throw new DeveloperError(
       `Resource with this cacheKey is already in the cache: ${cacheKey}`,
     );
   }
   //>>includeEnd('debug');
 
-  ResourceCache.cacheEntries[cacheKey] = new CacheEntry(resourceLoader);
+  ResourceCache.cacheEntries.set(cacheKey, new CacheEntry(resourceLoader));
 
   return resourceLoader;
 };
@@ -116,7 +116,7 @@ ResourceCache.unload = function (resourceLoader) {
   //>>includeEnd('debug');
 
   const cacheKey = resourceLoader.cacheKey;
-  const cacheEntry = ResourceCache.cacheEntries[cacheKey];
+  const cacheEntry = ResourceCache.cacheEntries.get(cacheKey);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cacheEntry)) {
@@ -129,7 +129,7 @@ ResourceCache.unload = function (resourceLoader) {
   if (cacheEntry.referenceCount === 0) {
     ResourceCache.statistics.removeLoader(resourceLoader);
     resourceLoader.destroy();
-    delete ResourceCache.cacheEntries[cacheKey];
+    ResourceCache.cacheEntries.delete(cacheKey);
   }
 };
 
@@ -796,10 +796,8 @@ ResourceCache.clearForSpecs = function () {
   const cacheEntries = ResourceCache.cacheEntries;
 
   const cacheEntriesSorted = [];
-  for (cacheKey in cacheEntries) {
-    if (cacheEntries.hasOwnProperty(cacheKey)) {
-      cacheEntriesSorted.push(cacheEntries[cacheKey]);
-    }
+  for (const entry of cacheEntries.values()) {
+    cacheEntriesSorted.push(entry);
   }
 
   cacheEntriesSorted.sort(function (a, b) {
@@ -812,9 +810,9 @@ ResourceCache.clearForSpecs = function () {
   for (let i = 0; i < cacheEntriesLength; ++i) {
     const cacheEntry = cacheEntriesSorted[i];
     cacheKey = cacheEntry.resourceLoader.cacheKey;
-    if (defined(cacheEntries[cacheKey])) {
+    if (defined(cacheEntries.get(cacheKey))) {
       cacheEntry.resourceLoader.destroy();
-      delete cacheEntries[cacheKey];
+      cacheEntries.delete(cacheKey);
     }
   }
 

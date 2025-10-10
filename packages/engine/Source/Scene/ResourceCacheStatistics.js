@@ -29,8 +29,8 @@ function ResourceCacheStatistics() {
 
   // Track the sizes of resources by cache key. This is important so
   // removeLoader() can decrement the counts correctly.
-  this._geometrySizes = {};
-  this._textureSizes = {};
+  this._geometrySizes = new Map();
+  this._textureSizes = new Map();
 }
 
 /**
@@ -42,8 +42,8 @@ ResourceCacheStatistics.prototype.clear = function () {
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
 
-  this._geometrySizes = {};
-  this._textureSizes = {};
+  this._geometrySizes.clear();
+  this._textureSizes.clear();
 };
 
 /**
@@ -66,11 +66,11 @@ ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
   const cacheKey = loader.cacheKey;
 
   // Don't double count the same resource.
-  if (this._geometrySizes.hasOwnProperty(cacheKey)) {
+  if (this._geometrySizes.has(cacheKey)) {
     return;
   }
 
-  this._geometrySizes[cacheKey] = 0;
+  this._geometrySizes.set(cacheKey, 0);
 
   const buffer = loader.buffer;
   const typedArray = loader.typedArray;
@@ -86,7 +86,7 @@ ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
   }
 
   this.geometryByteLength += totalSize;
-  this._geometrySizes[cacheKey] = totalSize;
+  this._geometrySizes.set(cacheKey, totalSize);
 };
 
 /**
@@ -106,14 +106,14 @@ ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
   const cacheKey = loader.cacheKey;
 
   // Don't double count the same resource.
-  if (this._textureSizes.hasOwnProperty(cacheKey)) {
+  if (this._textureSizes.has(cacheKey)) {
     return;
   }
 
-  this._textureSizes[cacheKey] = 0;
+  this._textureSizes.set(cacheKey, 0);
   const totalSize = loader.texture.sizeInBytes;
   this.texturesByteLength += loader.texture.sizeInBytes;
-  this._textureSizes[cacheKey] = totalSize;
+  this._textureSizes.set(cacheKey, totalSize);
 };
 
 /**
@@ -131,15 +131,15 @@ ResourceCacheStatistics.prototype.removeLoader = function (loader) {
   //>>includeEnd('debug');
 
   const cacheKey = loader.cacheKey;
-  const geometrySize = this._geometrySizes[cacheKey];
-  delete this._geometrySizes[cacheKey];
+  const geometrySize = this._geometrySizes.get(cacheKey);
+  this._geometrySizes.delete(cacheKey);
 
   if (defined(geometrySize)) {
     this.geometryByteLength -= geometrySize;
   }
 
-  const textureSize = this._textureSizes[cacheKey];
-  delete this._textureSizes[cacheKey];
+  const textureSize = this._textureSizes.get(cacheKey);
+  this._textureSizes.delete(cacheKey);
 
   if (defined(textureSize)) {
     this.texturesByteLength -= textureSize;

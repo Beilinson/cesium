@@ -3976,7 +3976,7 @@ Scene.prototype.updateHeight = function (
     );
   }
 
-  let tilesetRemoveCallbacks = {};
+  const tilesetRemoveCallbacks = new Map();
   const createPrimitiveEventListener = (primitive) => {
     if (
       ignore3dTiles ||
@@ -3991,7 +3991,7 @@ Scene.prototype.updateHeight = function (
       callbackWrapper,
       ellipsoid,
     );
-    tilesetRemoveCallbacks[primitive.id] = tilesetRemoveCallback;
+    tilesetRemoveCallbacks.set(primitive.id, tilesetRemoveCallback);
   };
 
   if (!ignore3dTiles) {
@@ -4010,10 +4010,10 @@ Scene.prototype.updateHeight = function (
       if (primitive.isDestroyed() || !primitive.isCesium3DTileset) {
         return;
       }
-      if (defined(tilesetRemoveCallbacks[primitive.id])) {
-        tilesetRemoveCallbacks[primitive.id]();
+      if (tilesetRemoveCallbacks.has(primitive.id)) {
+        tilesetRemoveCallbacks.get(primitive.id)();
+        tilesetRemoveCallbacks.delete(primitive.id);
       }
-      delete tilesetRemoveCallbacks[primitive.id];
     });
 
   const removeCallback = () => {
@@ -4021,7 +4021,7 @@ Scene.prototype.updateHeight = function (
     Object.values(tilesetRemoveCallbacks).forEach((tilesetRemoveCallback) =>
       tilesetRemoveCallback(),
     );
-    tilesetRemoveCallbacks = {};
+    tilesetRemoveCallbacks.clear();
     removeAddedListener();
     removeRemovedListener();
   };

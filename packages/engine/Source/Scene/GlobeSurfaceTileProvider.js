@@ -1485,7 +1485,7 @@ GlobeSurfaceTileProvider.prototype._onLayerAdded = function (layer, index) {
     const tileImageryUpdatedEvent = this._imageryLayersUpdatedEvent;
     const reloadFunction = function () {
       // Clear the layer's cache
-      layer._imageryCache = {};
+      layer._imageryCache?.clear();
 
       that._quadtree.forEachLoadedTile(function (tile) {
         // If this layer is still waiting to for the loaded callback, just return

@@ -318,7 +318,7 @@ function ImageryLayer(imageryProvider, options) {
   this._rectangle = options.rectangle ?? Rectangle.MAX_VALUE;
   this._maximumAnisotropy = options.maximumAnisotropy;
 
-  this._imageryCache = {};
+  this._imageryCache = new Map();
 
   this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
 
@@ -1451,11 +1451,11 @@ ImageryLayer.prototype.getImageryFromCache = function (
   imageryRectangle,
 ) {
   const cacheKey = getImageryCacheKey(x, y, level);
-  let imagery = this._imageryCache[cacheKey];
+  let imagery = this._imageryCache.get(cacheKey);
 
   if (!defined(imagery)) {
     imagery = new Imagery(this, x, y, level, imageryRectangle);
-    this._imageryCache[cacheKey] = imagery;
+    this._imageryCache.set(cacheKey, imagery);
   }
 
   imagery.addReference();
@@ -1464,7 +1464,7 @@ ImageryLayer.prototype.getImageryFromCache = function (
 
 ImageryLayer.prototype.removeImageryFromCache = function (imagery) {
   const cacheKey = getImageryCacheKey(imagery.x, imagery.y, imagery.level);
-  delete this._imageryCache[cacheKey];
+  this._imageryCache.delete(cacheKey);
 };
 
 function getImageryCacheKey(x, y, level) {

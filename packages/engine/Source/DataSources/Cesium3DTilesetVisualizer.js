@@ -37,7 +37,7 @@ function Cesium3DTilesetVisualizer(scene, entityCollection) {
   this._scene = scene;
   this._primitives = scene.primitives;
   this._entityCollection = entityCollection;
-  this._tilesetHash = {};
+  this._tilesetHash = new Map();
   this._entitiesToVisualize = new AssociativeArray();
   this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
 }
@@ -65,7 +65,7 @@ Cesium3DTilesetVisualizer.prototype.update = function (time) {
     const tilesetGraphics = entity._tileset;
 
     let resource;
-    const tilesetData = tilesetHash[entity.id];
+    const tilesetData = tilesetHash.get(entity.id);
     const show =
       entity.isShowing &&
       entity.isAvailable(time) &&
@@ -95,7 +95,7 @@ Cesium3DTilesetVisualizer.prototype.update = function (time) {
         primitives.removeAndDestroy(tileset);
       }
 
-      delete tilesetHash[entity.id];
+      tilesetHash.delete(entity.id);
 
       createTileset(resource, tilesetHash, entity, primitives);
     }
@@ -168,7 +168,7 @@ Cesium3DTilesetVisualizer.prototype.getBoundingSphere = function (
   }
   //>>includeEnd('debug');
 
-  const tilesetData = this._tilesetHash[entity.id];
+  const tilesetData = this._tilesetHash.get(entity.id);
   if (!defined(tilesetData) || tilesetData.loadFail) {
     return BoundingSphereState.FAILED;
   }
@@ -227,34 +227,35 @@ Cesium3DTilesetVisualizer.prototype._onCollectionChanged = function (
 };
 
 function removeTileset(visualizer, entity, tilesetHash, primitives) {
-  const tilesetData = tilesetHash[entity.id];
+  const tilesetData = tilesetHash.get(entity.id);
   if (defined(tilesetData)) {
     if (defined(tilesetData.tilesetPrimitive)) {
       primitives.removeAndDestroy(tilesetData.tilesetPrimitive);
     }
-    delete tilesetHash[entity.id];
+    tilesetHash.delete(entity.id);
   }
 }
 
 async function createTileset(resource, tilesetHash, entity, primitives) {
-  tilesetHash[entity.id] = {
+  tilesetHash.set(entity.id, {
     url: resource.url,
     loadFail: false,
-  };
+    tilesetPrimitive: undefined,
+  });
 
   try {
     const tileset = await Cesium3DTileset.fromUrl(resource);
     tileset.id = entity;
     primitives.add(tileset);
 
-    if (!defined(tilesetHash[entity.id])) {
+    if (!tilesetHash.has(entity.id)) {
       return;
     }
 
-    tilesetHash[entity.id].tilesetPrimitive = tileset;
+    tilesetHash.get(entity.id).tilesetPrimitive = tileset;
   } catch (error) {
     console.error(error);
-    tilesetHash[entity.id].loadFail = true;
+    tilesetHash.get(entity.id).loadFail = true;
   }
 }
 

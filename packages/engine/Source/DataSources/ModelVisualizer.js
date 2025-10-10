@@ -67,7 +67,7 @@ function ModelVisualizer(scene, entityCollection) {
   this._scene = scene;
   this._primitives = scene.primitives;
   this._entityCollection = entityCollection;
-  this._modelHash = {};
+  this._modelHash = new Map();
   this._entitiesToVisualize = new AssociativeArray();
 
   this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
@@ -91,15 +91,15 @@ async function createModelPrimitive(
       environmentMapOptions: environmentMapOptions,
     });
 
-    if (visualizer.isDestroyed() || !defined(modelHash[entity.id])) {
+    if (visualizer.isDestroyed() || !modelHash.has(entity.id)) {
       return;
     }
 
     model.id = entity;
     primitives.add(model);
-    modelHash[entity.id].modelPrimitive = model;
+    modelHash.get(entity.id).modelPrimitive = model;
     model.errorEvent.addEventListener((error) => {
-      if (!defined(modelHash[entity.id])) {
+      if (!defined(modelHash.get(entity.id))) {
         return;
       }
 
@@ -108,16 +108,16 @@ async function createModelPrimitive(
       // Texture failures when incrementallyLoadTextures
       // will not affect the ability to compute the bounding sphere
       if (error.name !== "TextureError" && model.incrementallyLoadTextures) {
-        modelHash[entity.id].loadFailed = true;
+        modelHash.get(entity.id).loadFailed = true;
       }
     });
   } catch (error) {
-    if (visualizer.isDestroyed() || !defined(modelHash[entity.id])) {
+    if (visualizer.isDestroyed() || !defined(modelHash.get(entity.id))) {
       return;
     }
 
     console.log(error);
-    modelHash[entity.id].loadFailed = true;
+    modelHash.get(entity.id).loadFailed = true;
   }
 }
 
@@ -144,7 +144,7 @@ ModelVisualizer.prototype.update = function (time) {
     const modelGraphics = entity._model;
 
     let resource;
-    let modelData = modelHash[entity.id];
+    let modelData = modelHash.get(entity.id);
     let show =
       entity.isShowing &&
       entity.isAvailable(time) &&
@@ -169,7 +169,7 @@ ModelVisualizer.prototype.update = function (time) {
     if (!defined(modelData) || resource.url !== modelData.url) {
       if (defined(modelData?.modelPrimitive)) {
         primitives.removeAndDestroy(modelData.modelPrimitive);
-        delete modelHash[entity.id];
+        modelHash.delete(entity.id);
       }
 
       modelData = {
@@ -184,7 +184,7 @@ ModelVisualizer.prototype.update = function (time) {
           ...defaultEnvironmentMapOptions,
         },
       };
-      modelHash[entity.id] = modelData;
+      modelHash.set(entity.id, modelData);
 
       const incrementallyLoadTextures = Property.getValueOrDefault(
         modelGraphics._incrementallyLoadTextures,
@@ -311,7 +311,7 @@ ModelVisualizer.prototype.update = function (time) {
 
     // It's possible for getBoundingSphere to run before
     // model becomes ready and these properties are updated
-    modelHash[entity.id].modelUpdated = true;
+    modelHash.get(entity.id).modelUpdated = true;
 
     if (model.ready) {
       const runAnimations = Property.getValueOrDefault(
@@ -451,7 +451,7 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   }
   //>>includeEnd('debug');
 
-  const modelData = this._modelHash[entity.id];
+  const modelData = this._modelHash.get(entity.id);
   if (!defined(modelData)) {
     return BoundingSphereState.FAILED;
   }
@@ -542,15 +542,15 @@ ModelVisualizer.prototype._onCollectionChanged = function (
 };
 
 function removeModel(visualizer, entity, modelHash, primitives) {
-  const modelData = modelHash[entity.id];
+  const modelData = modelHash.get(entity.id);
   if (defined(modelData)) {
     primitives.removeAndDestroy(modelData.modelPrimitive);
-    delete modelHash[entity.id];
+    modelHash.delete(entity.id);
   }
 }
 
 function clearNodeTransformationsArticulationsScratch(entity, modelHash) {
-  const modelData = modelHash[entity.id];
+  const modelData = modelHash.get(entity.id);
   if (defined(modelData)) {
     modelData.nodeTransformationsScratch = {};
     modelData.articulationsScratch = {};

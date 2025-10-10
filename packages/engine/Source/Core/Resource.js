@@ -35,6 +35,8 @@ const xhrBlobSupported = (function () {
     return false;
   }
 })();
+const supportsXMLHttpRequest = typeof XMLHttpRequest !== "undefined";
+const supportsFetch = typeof fetch !== "undefined";
 
 /**
  * @typedef {object} Resource.ConstructorOptions
@@ -255,6 +257,8 @@ Resource.supportsImageBitmapOptions = function () {
   return supportsImageBitmapOptionsPromise;
 };
 
+Resource._useFetch = true;
+
 Object.defineProperties(Resource, {
   /**
    * Returns true if blobs are supported.
@@ -267,6 +271,32 @@ Object.defineProperties(Resource, {
   isBlobSupported: {
     get: function () {
       return xhrBlobSupported;
+    },
+  },
+
+  /**
+   * Whether to use the Fetch API for requests rather than XMLHttpRequest.
+   * @memberof Resource
+   * @type {boolean}
+   */
+  useFetch: {
+    get: function () {
+      return this._useFetch;
+    },
+    set: function (value) {
+      if (value && !supportsFetch) {
+        this._useFetch = false;
+        console.error(
+          "Fetch API is not supported on this platform, falling back to XHR",
+        );
+      } else if (!value && !supportsXMLHttpRequest) {
+        this._useFetch = true;
+        console.error(
+          "XMLHttpRequest is not supported on this platform, falling back to XHR",
+        );
+      } else {
+        this._useFetch = value;
+      }
     },
   },
 });
@@ -1163,24 +1193,35 @@ Resource.fetchText = function (options) {
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
-Resource.prototype.fetchJson = function () {
-  const promise = this.fetch({
-    responseType: "text",
-    headers: {
-      Accept: "application/json,*/*;q=0.01",
-    },
-  });
-
-  if (!defined(promise)) {
-    return undefined;
+Resource.prototype.fetchJson = async function () {
+  let value;
+  if (Resource.useFetch) {
+    value = await this.fetch({
+      responseType: "json",
+      headers: {
+        Accept: "application/json,*/*;q=0.01",
+      },
+    });
+  } else {
+    value = this.fetch({
+      responseType: "text",
+      headers: {
+        Accept: "application/json,*/*;q=0.01",
+      },
+    });
   }
 
-  return promise.then(function (value) {
-    if (!defined(value)) {
-      return;
+  if (!defined(value)) {
+    return;
+  }
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
     }
-    return JSON.parse(value);
-  });
+  }
+  return value;
 };
 
 /**
@@ -1372,7 +1413,7 @@ Resource.prototype._makeRequest = function (options) {
     const method = options.method;
     const data = options.data;
     const deferred = defer();
-    const xhr = Resource._Implementations.loadWithXhr(
+    const cancellationFunction = Resource._Implementations.load(
       url,
       responseType,
       method,
@@ -1381,10 +1422,8 @@ Resource.prototype._makeRequest = function (options) {
       deferred,
       overrideMimeType,
     );
-    if (defined(xhr) && defined(xhr.abort)) {
-      request.cancelFunction = function () {
-        xhr.abort();
-      };
+    if (defined(cancellationFunction)) {
+      request.cancelFunction = cancellationFunction;
     }
     return deferred.promise;
   };
@@ -1450,6 +1489,10 @@ function decodeDataUriText(isBase64, data) {
 }
 
 function decodeDataUriArrayBuffer(isBase64, data) {
+  if (isBase64 && defined(Uint8Array.fromBase64)) {
+    data = decodeURIComponent(data);
+    return Uint8Array.fromBase64(data).buffer;
+  }
   const byteString = decodeDataUriText(isBase64, data);
   const buffer = new ArrayBuffer(byteString.length);
   const view = new Uint8Array(buffer);
@@ -1459,13 +1502,18 @@ function decodeDataUriArrayBuffer(isBase64, data) {
   return buffer;
 }
 
+/** @type {DOMParser} */
+let parser;
+if (typeof DOMParser !== "undefined") {
+  parser = new DOMParser();
+}
+
 function decodeDataUri(dataUriRegexResult, responseType) {
   responseType = responseType ?? "";
   const mimeType = dataUriRegexResult[1];
   const isBase64 = !!dataUriRegexResult[2];
   const data = dataUriRegexResult[3];
   let buffer;
-  let parser;
 
   switch (responseType) {
     case "":
@@ -1479,7 +1527,9 @@ function decodeDataUri(dataUriRegexResult, responseType) {
         type: mimeType,
       });
     case "document":
-      parser = new DOMParser();
+      if (!defined(parser)) {
+        throw new Error("DOMParser is not supported.");
+      }
       return parser.parseFromString(
         decodeDataUriText(isBase64, data),
         mimeType,
@@ -2046,7 +2096,19 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
   });
 };
 
-function loadWithHttpRequest(
+/**
+ * Loads a resource using either the Fetch API or XMLHttpRequest, depending on `Resource.useFetch`.
+ *
+ * @param {string} url
+ * @param {string} responseType
+ * @param {string} method
+ * @param {object} data
+ * @param {object} headers
+ * @param {defer.deferred} deferred
+ * @param {string} overrideMimeType
+ * @returns A cancellation function to cancel the request.
+ */
+Resource._Implementations.load = function (
   url,
   responseType,
   method,
@@ -2055,41 +2117,221 @@ function loadWithHttpRequest(
   deferred,
   overrideMimeType,
 ) {
-  // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
-  fetch(url, {
-    method,
-    headers,
-  })
-    .then(async (response) => {
-      if (!response.ok) {
-        const responseHeaders = {};
-        response.headers.forEach((value, key) => {
-          responseHeaders[key] = value;
-        });
-        deferred.reject(
-          new RequestErrorEvent(response.status, response, responseHeaders),
-        );
-        return;
-      }
+  const dataUriRegexResult = dataUriRegex.exec(url);
+  if (dataUriRegexResult !== null) {
+    deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
+    return;
+  }
+  let request;
+  if (Resource.useFetch) {
+    request = Resource._Implementations.loadWithFetch(
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType,
+    );
+  } else {
+    request = Resource._Implementations.loadWithXhr(
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType,
+    );
+  }
+  if (defined(request?.abort)) {
+    return function () {
+      request.abort();
+    };
+  }
+};
 
-      switch (responseType) {
-        case "text":
-          deferred.resolve(response.text());
-          break;
-        case "json":
-          deferred.resolve(response.json());
-          break;
-        default:
-          deferred.resolve(new Uint8Array(await response.arrayBuffer()).buffer);
-          break;
+/**
+ * Loads a resource using the Fetch API
+ *
+ * @param {string} url
+ * @param {string} responseType
+ * @param {string} method
+ * @param {object} data
+ * @param {object} headers
+ * @param {defer.deferred} deferred
+ * @param {string|undefined} overrideMimeType
+ * @returns {AbortController} The AbortController which can be used to cancel the request.
+ */
+Resource._Implementations.loadWithFetch = function (
+  url,
+  responseType,
+  method,
+  data,
+  headers,
+  deferred,
+  overrideMimeType,
+) {
+  const controller = new AbortController();
+
+  /** @type {RequestInit} */
+  const fetchOptions = {
+    method: method,
+    headers: headers,
+    body: data,
+    signal: controller.signal,
+  };
+
+  if (TrustedServers.contains(url)) {
+    fetchOptions.credentials = "include";
+  }
+
+  const responsePromise = fetch(url, fetchOptions);
+  handleFetchResponse(
+    responsePromise,
+    url,
+    responseType,
+    method,
+    deferred,
+    overrideMimeType,
+  );
+
+  return controller; // Return controller for external cancellation
+};
+
+/**
+ * Handles the fetch response, resolving or rejecting the deferred as appropriate
+ * @param {Promise<Response>} responsePromise
+ * @param {string} url
+ * @param {XMLHttpRequestResponseType|undefined} responseType
+ * @param {string} method
+ * @param {defer.deferred} deferred
+ * @param {string|undefined} overrideMimeType
+ */
+async function handleFetchResponse(
+  responsePromise,
+  url,
+  responseType,
+  method,
+  deferred,
+  overrideMimeType,
+) {
+  let response;
+  try {
+    response = await responsePromise;
+    // Handle local file:// success case
+    let localFile = false;
+    if (typeof url === "string") {
+      localFile =
+        url.indexOf("file://") === 0 ||
+        (typeof window !== "undefined" && window.location.origin === "file://");
+    }
+
+    if (
+      (response.status < 200 || response.status >= 300) &&
+      !(localFile && response.status === 0)
+    ) {
+      let bodyText;
+      // Try to get text body for the error, if possible
+      try {
+        bodyText = await response.text?.();
+      } catch {
+        // no-op
       }
-    })
-    .catch(() => {
-      deferred.reject(new RequestErrorEvent());
-    });
+      deferred.reject(
+        new RequestErrorEvent(response.status, bodyText, response.headers),
+      );
+      return;
+    }
+
+    if (method === "HEAD" || method === "OPTIONS") {
+      const headersObj = Object.fromEntries(response.headers.entries());
+      deferred.resolve(headersObj);
+      return;
+    }
+
+    // --- 204 No Content ---
+    if (response.status === 204) {
+      deferred.resolve(undefined);
+      return;
+    }
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      deferred.reject(error);
+    } else {
+      deferred.reject(
+        new RequestErrorEvent(response?.status, error, response?.headers),
+      );
+    }
+  }
+
+  try {
+    const result = await getResponseByType(
+      response,
+      responseType,
+      overrideMimeType,
+    );
+    deferred.resolve(result);
+  } catch (e) {
+    deferred.reject(e);
+  }
 }
 
-const noXMLHttpRequest = typeof XMLHttpRequest === "undefined";
+/**
+ * @param {Response} response
+ * @param {XMLHttpRequestResponseType|undefined} responseType
+ * @param {string|undefined} overrideMimeType
+ * @returns {Promise<any>}
+ */
+function getResponseByType(response, responseType, overrideMimeType) {
+  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types#structure_of_a_mime_type
+  // Extract type/subtype when content-type is type/subtype;parameter-value:
+  let mimeType =
+    overrideMimeType ?? response.headers?.get("content-type")?.split(";")[0];
+  if (!responseType && mimeType) {
+    // Try to emulate XHR behavior by gleaning the intended response-type from either the overrideMimeType
+    // or the "content-type" header. In the event that neither of these exist, we defaults to "text", just like XHR.
+    switch (mimeType) {
+      // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseXML
+      case "text/html":
+      case "text/xml":
+      case "application/xml":
+        responseType = "document";
+        break;
+      case "application/json":
+        responseType = "json";
+        mimeType = undefined;
+        break;
+      // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType#sect
+      default:
+        responseType = "text";
+        mimeType = undefined;
+        break;
+    }
+  }
+
+  switch (responseType) {
+    case "arraybuffer":
+      return response.arrayBuffer();
+    case "json":
+      return response.json();
+    case "document":
+      return response.text().then((text) => {
+        if (!defined(parser)) {
+          throw new Error("DOMParser is not supported.");
+        }
+        return parser.parseFromString(text, mimeType ?? "text/xml");
+      });
+    case "blob":
+      return response.blob();
+    case "":
+    case "text":
+    case undefined:
+    default:
+      return response.text();
+  }
+}
+
 Resource._Implementations.loadWithXhr = function (
   url,
   responseType,
@@ -2105,17 +2347,15 @@ Resource._Implementations.loadWithXhr = function (
     return;
   }
 
-  if (noXMLHttpRequest) {
-    loadWithHttpRequest(
+  if (!supportsXMLHttpRequest) {
+    return Resource._Implementations.loadWithFetch(
       url,
       responseType,
       method,
       data,
       headers,
       deferred,
-      overrideMimeType,
     );
-    return;
   }
 
   const xhr = new XMLHttpRequest();
@@ -2247,6 +2487,7 @@ Resource._DefaultImplementations.createImage =
   Resource._Implementations.createImage;
 Resource._DefaultImplementations.loadWithXhr =
   Resource._Implementations.loadWithXhr;
+Resource._DefaultImplementations.load = Resource._Implementations.load;
 Resource._DefaultImplementations.loadAndExecuteScript =
   Resource._Implementations.loadAndExecuteScript;
 

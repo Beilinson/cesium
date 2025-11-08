@@ -8,8 +8,12 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import Check from "../../Core/Check.js";
 
 import AttributeType from "../AttributeType.js";
-import ModelReader from "./ModelReader.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
+import Cartographic from "../../Core/Cartographic.js";
+
+const scratchCartesian3 = new Cartesian3();
+const scratchCartographic = new Cartographic();
+const scratchTexCoord = new Cartesian2();
 
 /**
  * A class for computing the texture coordinates of imagery that is
@@ -62,8 +66,7 @@ class ModelImageryMapping {
    * projecting the given positions with the given projection,
    * and normalizing them to the given bounding rectangle.
    *
-   * @param {Cartographic[]} cartographicPositions The
-   * cartographic positions
+   * @param {Float64Array[]} cartographicPositions The cartographic positions
    * @param {number} numPositions The number of positions (vertices)
    * @param {Rectangle} cartographicBoundingRectangle The bounding
    * rectangle of the cartographic positions
@@ -96,23 +99,27 @@ class ModelImageryMapping {
       boundingRectangle,
     );
 
-    const projectedPosition = new Cartesian3();
-    const texCoord = new Cartesian2();
-    const texCoordsTypedArray = new Float32Array(numPositions * 2);
+    const texCoordsTypedArray = new Float32Array(numPositions);
 
     let index = 0;
-    for (const cartographic of cartographicPositions) {
+    // for (const cartographic of cartographicPositions) {
+    for (let i = 0; i < cartographicPositions.length / 2; i++) {
+      scratchCartographic.longitude = cartographicPositions[i * 2 + 0];
+      scratchCartographic.latitude = cartographicPositions[i * 2 + 1];
       // Compute the projected positions, using the given projection
-      projection.project(cartographic, projectedPosition);
+      const projectedPosition = projection.project(
+        scratchCartographic,
+        scratchCartesian3,
+      );
       // Relativize the projected positions into the bounding rectangle
       // to obtain texture coordinates
       ModelImageryMapping.computeTexCoords(
         projectedPosition,
         boundingRectangle,
-        texCoord,
+        scratchTexCoord,
       );
-      texCoordsTypedArray[index * 2 + 0] = texCoord.x;
-      texCoordsTypedArray[index * 2 + 1] = texCoord.y;
+      texCoordsTypedArray[index * 2 + 0] = scratchTexCoord.x;
+      texCoordsTypedArray[index * 2 + 1] = scratchTexCoord.y;
       index++;
     }
 
@@ -169,12 +176,13 @@ class ModelImageryMapping {
    * @param {ModelComponents.Attribute} primitivePositionAttribute
    * The "POSITION" attribute of the primitive.
    * @param {Matrix4} primitivePositionTransform The full transform of the primitive
-   * @param {Elliposid} ellipsoid The ellipsoid that should be used
-   * @returns {Cartographic[]} The `Cartographic` positions
+   * @param {import("../../Core/Ellipsoid.js").default} ellipsoid The ellipsoid that should be used
+   * @returns {Float64Array[]} The `Cartographic` positions packed into a `Float64Array` as `lon/lat` pairs
    */
   static createCartographicPositions(
     primitivePositionAttribute,
     primitivePositionTransform,
+    primitivePositionTypedArray,
     ellipsoid,
   ) {
     //>>includeStart('debug', pragmas.debug);
@@ -183,34 +191,34 @@ class ModelImageryMapping {
     Check.defined("ellipsoid", ellipsoid);
     //>>includeEnd('debug');
 
-    // Extract the positions as a typed array
-    const typedArray = ModelReader.readAttributeAsTypedArray(
-      primitivePositionAttribute,
-    );
-
     const type = primitivePositionAttribute.type;
     const numComponents = AttributeType.getNumberOfComponents(type);
+    const numElements = primitivePositionTypedArray.length / numComponents;
 
-    const cartesian = new Cartesian3();
-    const numElements = typedArray.length / numComponents;
+    const lonLatTypedArray = new Float64Array(numElements * 2);
 
-    const cartographicPositions = new Array(numElements);
     for (let i = 0; i < numElements; i++) {
-      cartesian.x = typedArray[i * numComponents + 0];
-      cartesian.y = typedArray[i * numComponents + 1];
-      cartesian.z = typedArray[i * numComponents + 2];
+      scratchCartesian3.x = primitivePositionTypedArray[i * numComponents + 0];
+      scratchCartesian3.y = primitivePositionTypedArray[i * numComponents + 1];
+      scratchCartesian3.z = primitivePositionTypedArray[i * numComponents + 2];
       // Transform the cartesian by the matrix
-      const cartographicPosition = Matrix4.multiplyByPoint(
+      const cartesianTransformed = Matrix4.multiplyByPoint(
         primitivePositionTransform,
-        cartesian,
-        cartesian,
+        scratchCartesian3,
+        scratchCartesian3,
       );
+      // cartesianPositions[i] = cartesianTransformed;
       // Compute the cartographic positions for the given ellipsoid
-      cartographicPositions[i] =
-        ellipsoid.cartesianToCartographic(cartographicPosition);
+
+      const cartographic = ellipsoid.cartesianToCartographic(
+        cartesianTransformed,
+        scratchCartographic,
+      );
+      lonLatTypedArray[i * 2 + 0] = cartographic.longitude;
+      lonLatTypedArray[i * 2 + 1] = cartographic.latitude;
     }
 
-    return cartographicPositions;
+    return lonLatTypedArray;
   }
 
   /**
@@ -220,7 +228,7 @@ class ModelImageryMapping {
    * If the given result is `undefined`, a new rectangle will be created
    * and returned.
    *
-   * @param {Cartographic[]} cartographicPositions The cartographics
+   * @param {Float64Array} cartographicPositions The cartographics
    * @param {Rectangle} [result] The result
    * @returns {Rectangle} The result
    */
@@ -238,11 +246,14 @@ class ModelImageryMapping {
     let south = Number.POSITIVE_INFINITY;
     let east = Number.NEGATIVE_INFINITY;
     let west = Number.POSITIVE_INFINITY;
-    for (const cartographicPosition of cartographicPositions) {
-      north = Math.max(north, cartographicPosition.latitude);
-      south = Math.min(south, cartographicPosition.latitude);
-      east = Math.max(east, cartographicPosition.longitude);
-      west = Math.min(west, cartographicPosition.longitude);
+    // for (const cartographicPosition of cartographicPositions) {
+    for (let i = 0; i < cartographicPositions.length / 2; i++) {
+      const longitude = cartographicPositions[i * 2 + 0];
+      const latitude = cartographicPositions[i * 2 + 1];
+      north = Math.max(north, latitude);
+      south = Math.min(south, latitude);
+      east = Math.max(east, longitude);
+      west = Math.min(west, longitude);
     }
     result.north = north;
     result.south = south;

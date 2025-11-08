@@ -16,7 +16,7 @@ class MappedPositions {
   /**
    * Creates a new instance
    *
-   * @param {Cartographic[]} cartographicPositions The positions
+   * @param {Float64Array[]} cartographicPositions The positions
    * @param {number} numPositions The number of positions
    * @param {Rectangle} cartographicBoundingRectangle The bounding
    * rectangle of the positions
@@ -47,7 +47,7 @@ class MappedPositions {
   /**
    * Returns the cartographic positions
    *
-   * @returns {Cartographic[]} The positions
+   * @returns {Float64Array[]} The positions
    */
   get cartographicPositions() {
     return this._cartographicPositions;

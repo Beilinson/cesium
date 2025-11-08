@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
-import { join } from "node:path";
+import { execPath } from "node:process";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
@@ -9,10 +10,11 @@ import { fileURLToPath } from "node:url";
  * @returns {number} exit code from the tsc command
  */
 export default async function typescriptCompile(configPath) {
-  const tsPath = import.meta.resolve("typescript");
-  const binPath = fileURLToPath(join(tsPath, "../../bin/tsc"));
+  const tsPath = fileURLToPath(import.meta.resolve("typescript"));
+  const binPath = join(tsPath, "../../bin/tsc");
+  console.log(resolve("typescript/bin/tsc"));
   return new Promise((resolve, reject) => {
-    const ls = spawn(binPath, ["-p", configPath]);
+    const ls = spawn(execPath, [binPath, "-p", configPath]);
 
     ls.stdout.on("data", (data) => {
       console.log(`stdout: ${data}`);

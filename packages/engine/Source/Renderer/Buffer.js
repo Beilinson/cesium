@@ -7,6 +7,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import BufferUsage from "./BufferUsage.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 
 /**
  * @private
@@ -69,6 +70,8 @@ function Buffer(options) {
   this._sizeInBytes = sizeInBytes;
   this._usage = usage;
   this._buffer = buffer;
+  /** @type {Uint8Array} */
+  this._typedArray = typedArray;
   this.vertexArrayDestroyable = true;
 }
 
@@ -367,6 +370,14 @@ Buffer.prototype.copyFromBuffer = function (
   gl.bindBuffer(readTarget, null);
 };
 
+/**
+ *
+ * @param {Uint16Array | number} arrayView
+ * @param {*} sourceOffset
+ * @param {*} destinationOffset
+ * @param {*} length
+ * @returns
+ */
 Buffer.prototype.getBufferData = function (
   arrayView,
   sourceOffset,
@@ -382,6 +393,22 @@ Buffer.prototype.getBufferData = function (
   }
   if (!defined(arrayView)) {
     throw new DeveloperError("arrayView is required.");
+  }
+  if (
+    typeof arrayView === "number" &&
+    this._typedArray instanceof Uint8Array &&
+    sourceOffset === 0 &&
+    destinationOffset === 0
+  ) {
+    return ComponentDatatype.createArrayBufferView(
+      arrayView,
+      this._typedArray.buffer,
+      sourceOffset,
+    );
+  }
+
+  if (typeof arrayView === "number") {
+    arrayView = ComponentDatatype.createTypedArray(arrayView, length);
   }
 
   let copyLength;
@@ -439,6 +466,7 @@ Buffer.prototype.getBufferData = function (
     length,
   );
   gl.bindBuffer(target, null);
+  return arrayView;
 };
 
 Buffer.prototype.isDestroyed = function () {

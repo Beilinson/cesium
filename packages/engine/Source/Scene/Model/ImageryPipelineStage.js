@@ -19,7 +19,7 @@ import oneTimeWarning from "../../Core/oneTimeWarning.js";
  * (Similar to "SHOW_TILE_BOUNDARIES" in GlobeFS.glsl)
  * @private
  */
-const debugDrawImageryBoundaries = false;
+const debugDrawImageryBoundaries = true;
 
 // Scratch variable for _computeTextureTranslationAndScale
 const nativeBoundingRectangleScratch = new Rectangle();

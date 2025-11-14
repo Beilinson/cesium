@@ -12,6 +12,7 @@ import MappedPositions from "./MappedPositions.js";
 
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
+import ModelReader from "./ModelReader.js";
 
 /**
  * A class managing the draping of imagery on a single model primitive.
@@ -424,7 +425,11 @@ class ModelPrimitiveImagery {
       ModelPrimitiveImagery._obtainPrimitivePositionAttribute(
         runtimePrimitive.primitive,
       );
-    const numPositions = primitivePositionAttribute.count;
+
+    // Extract the positions as a typed array
+    const typedArray = ModelReader.readAttributeAsTypedArray(
+      primitivePositionAttribute,
+    );
 
     const primitivePositionTransform =
       ModelPrimitiveImagery._computePrimitivePositionTransform(
@@ -445,6 +450,7 @@ class ModelPrimitiveImagery {
         ModelImageryMapping.createCartographicPositions(
           primitivePositionAttribute,
           primitivePositionTransform,
+          typedArray,
           ellipsoid,
         );
       const cartographicBoundingRectangle =
@@ -454,7 +460,7 @@ class ModelPrimitiveImagery {
 
       const mappedPositions = new MappedPositions(
         cartographicPositions,
-        numPositions,
+        cartographicPositions.length,
         cartographicBoundingRectangle,
         ellipsoid,
       );

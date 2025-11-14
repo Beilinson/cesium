@@ -145,12 +145,17 @@ class ModelReader {
     const bytesPerComponent = ComponentDatatype.getSizeInBytes(componentType);
     const defaultByteStride = componentsPerElement * bytesPerComponent;
     if (!defined(byteStride) || byteStride === defaultByteStride) {
-      const typedArray = ComponentDatatype.createTypedArray(
+      // const typedArray = ComponentDatatype.createTypedArray(
+      //   componentType,
+      //   totalComponentCount,
+      // );
+      return buffer.getBufferData(
         componentType,
+        byteOffset,
+        0,
         totalComponentCount,
       );
-      buffer.getBufferData(typedArray, byteOffset);
-      return typedArray;
+      // return typedArray;
     }
 
     // Fetch the whole buffer in its raw form, to pick out the

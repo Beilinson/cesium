@@ -50,6 +50,16 @@ function initialize(ellipsoid, x, y, z) {
     ellipsoid._squaredXOverSquaredZ =
       ellipsoid._radiiSquared.x / ellipsoid._radiiSquared.z;
   }
+
+  ellipsoid._e2Real =
+    (ellipsoid._radiiSquared.x - ellipsoid._radiiSquared.z) *
+    ellipsoid._oneOverRadiiSquared.x;
+  ellipsoid._e2 =
+    (ellipsoid._radiiSquared.x - ellipsoid._radiiSquared.z) *
+    ellipsoid._oneOverRadii.x;
+  ellipsoid._e2p =
+    (ellipsoid._radiiSquared.x - ellipsoid._radiiSquared.z) *
+    ellipsoid._oneOverRadii.z;
 }
 
 /**
@@ -492,9 +502,19 @@ Ellipsoid.prototype.cartographicArrayToCartesianArray = function (
   return result;
 };
 
-const cartesianToCartographicN = new Cartesian3();
-const cartesianToCartographicP = new Cartesian3();
-const cartesianToCartographicH = new Cartesian3();
+// const cartesianToCartographicN = new Cartesian3();
+// const cartesianToCartographicP = new Cartesian3();
+// const cartesianToCartographicH = new Cartesian3();
+
+// let times1 = [];
+// let times2 = [];
+// let errors = [];
+
+// const scratchResult2 = new Cartographic();
+
+// function sum(arr) {
+//   return arr.reduce((acc, curr) => acc + curr, 0);
+// }
 
 /**
  * Converts the provided cartesian to cartographic representation.
@@ -510,27 +530,115 @@ const cartesianToCartographicH = new Cartesian3();
  * const cartographicPosition = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position);
  */
 Ellipsoid.prototype.cartesianToCartographic = function (cartesian, result) {
-  //`cartesian is required.` is thrown from scaleToGeodeticSurface
-  const p = this.scaleToGeodeticSurface(cartesian, cartesianToCartographicP);
+  return this.cartesianToCartographicFast(cartesian, result);
+  // const s = performance.now();
+  // //`cartesian is required.` is thrown from scaleToGeodeticSurface
+  // const p = this.scaleToGeodeticSurface(cartesian, cartesianToCartographicP);
 
-  if (!defined(p)) {
-    return undefined;
-  }
+  // if (!defined(p)) {
+  //   return undefined;
+  // }
 
-  const n = this.geodeticSurfaceNormal(p, cartesianToCartographicN);
-  const h = Cartesian3.subtract(cartesian, p, cartesianToCartographicH);
+  // const n = this.geodeticSurfaceNormal(p, cartesianToCartographicN);
+  // const h = Cartesian3.subtract(cartesian, p, cartesianToCartographicH);
 
-  const longitude = Math.atan2(n.y, n.x);
-  const latitude = Math.asin(n.z);
-  const height =
-    CesiumMath.sign(Cartesian3.dot(h, cartesian)) * Cartesian3.magnitude(h);
+  // const longitude = Math.atan2(n.y, n.x);
+  // const latitude = Math.asin(n.z);
 
-  if (!defined(result)) {
+  // const middle = performance.now();
+  // const res = this.cartesianToCartographicFast(cartesian, scratchResult2);
+
+  // times2.push(performance.now() - middle);
+  // times1.push(middle - s);
+
+  // const height =
+  //   CesiumMath.sign(Cartesian3.dot(h, cartesian)) * Cartesian3.magnitude(h);
+
+  // errors.push(
+  //   Math.max(
+  //     Math.abs(longitude - res.longitude),
+  //     Math.abs(latitude - res.latitude),
+  //     Math.abs(height - res.height),
+  //   ),
+  // );
+
+  // if (times1.length === 10000) {
+  //   const avgCartesianToCartographic = sum(times1) / times1.length;
+  //   const avgCartesianToCartographicFast = sum(times2) / times2.length;
+  //   console.log(`Avg cartesianToCartographic: ${avgCartesianToCartographic}`);
+  //   console.log(
+  //     `Avg cartesianToCartographicFast: ${avgCartesianToCartographicFast}`,
+  //   );
+  //   console.log(
+  //     `Avg speedup: ${(avgCartesianToCartographic / avgCartesianToCartographicFast).toFixed(3)}x`,
+  //   );
+  //   console.log(`Max error: ${Math.max(...errors)}`);
+  //   console.log(`Avg error: ${sum(errors) / errors.length}`);
+
+  //   times1 = [];
+  //   times2 = [];
+  //   errors = [];
+  // }
+
+  // if (!defined(result)) {
+  //   return new Cartographic(longitude, latitude, height);
+  // }
+  // result.longitude = longitude;
+  // result.latitude = latitude;
+  // result.height = height;
+
+  // return result;
+};
+
+/**
+ * Converts the provided cartesian to cartographic representation.
+ * The cartesian is undefined at the center of the ellipsoid.
+ *
+ * @param {Cartesian3} cartesian The Cartesian position to convert to cartographic representation.
+ * @param {Cartographic} [result] The object onto which to store the result.
+ * @returns {Cartographic} The modified result parameter, new Cartographic instance if none was provided, or undefined if the cartesian is at the center of the ellipsoid.
+ *
+ * @example
+ * //Create a Cartesian and determine it's Cartographic representation on a WGS84 ellipsoid.
+ * const position = new Cesium.Cartesian3(17832.12, 83234.52, 952313.73);
+ * const cartographicPosition = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position);
+ */
+Ellipsoid.prototype.cartesianToCartographicFast = function (cartesian, result) {
+  const { x, y, z } = cartesian;
+  const longitude = Math.atan2(y, x);
+
+  const a = this.radii.x;
+  const b = this.radii.z;
+
+  // Latitude approximation using Bowring's formula
+
+  const p = Cartesian2.magnitude(cartesian);
+  const theta = Math.atan2(z * a, p * b);
+
+  const sinTheta = Math.sin(theta);
+  const cosTheta = Math.cos(theta);
+
+  const latitude = Math.atan2(
+    z + this._e2p * sinTheta * sinTheta * sinTheta,
+    p - this._e2 * cosTheta * cosTheta * cosTheta,
+  );
+  const sinLatitude = Math.sin(latitude);
+  const N = a / Math.sqrt(1 - this._e2Real * sinLatitude * sinLatitude);
+  const height = p / Math.cos(latitude) - N;
+
+  // if (isNaN(longitude) || isNaN(latitude) || isNaN(height)) {
+  //   console.log(cartesian.toString());
+  //   console.log(longitude, latitude, height);
+  // }
+
+  if (!result) {
     return new Cartographic(longitude, latitude, height);
   }
+
   result.longitude = longitude;
   result.latitude = latitude;
   result.height = height;
+
   return result;
 };
 
